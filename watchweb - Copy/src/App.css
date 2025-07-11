@@ -1,0 +1,222 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+@import "tailwindcss";
+
+.playfair-display {
+  font-family: "Playfair Display", serif;
+  font-optical-sizing: auto;
+  font-weight: 500; /* Buraya istədiyin ağırlığı yaz: 400, 500, 600, 700, 800, 900 */
+  font-style: normal; /* Əgər italic istəsən: font-style: italic; */
+}
+
+.bg-watch {
+    width: 100%;
+    height: 600px;
+    background-image: url('/watch1.jpg'); /* Şəkil yolu */
+    background-size: cover;              /* Şəkli konteynerə oturt */
+    background-position: center;         /* Ortaya hizala */
+    background-repeat: no-repeat;        /* Təkrarlanmasın */
+  }
+  .bg-watch-2 {
+    width: 100%;
+    height: 600px;
+    background-image: url('/watch3.jpg'); /* Şəkil yolu */
+    background-size: cover;              /* Şəkli konteynerə oturt */
+    background-position: center;         /* Ortaya hizala */
+    background-repeat: no-repeat;        /* Təkrarlanmasın */
+  }
+.shop-text{
+    font-weight: 500;
+}
+.paraqrafs{
+  letter-spacing: 10px;
+
+}
+.div-v h1{
+  letter-spacing: 10px;
+}
+
+  @media(min-width:315px) and (max-width:374px){
+    .bg-watch-mobile {
+    width: 100%;
+    height: 600px;
+    background-image: url('/watch2.jpeg'); /* Şəkil yolu */
+    background-size: cover;              /* Şəkli konteynerə oturt */
+    background-position: center;         /* Ortaya hizala */
+    background-repeat: no-repeat;        /* Təkrarlanmasın */
+    
+  }
+     .bg-watch-mobile-2 {
+    width: 100%;
+    height: 600px;
+    background-image: url('/watch-4.jpg'); /* Şəkil yolu */
+    background-size: cover;              /* Şəkli konteynerə oturt */
+    background-position: center;         /* Ortaya hizala */
+    background-repeat: no-repeat;        /* Təkrarlanmasın */
+    
+  }
+  .bg-watch{
+    display: none;
+  }
+  .percent-{
+    text-align: center;
+   font-size: 40px;
+
+  }
+  .percents{
+    text-align: center;
+   font-size: 15px;
+   padding-top: 190px;
+  }
+  .shop-i5{
+    padding-top: 10px;
+  }
+  .bg-watch-2{
+    display: none !important;
+  }
+  .zaza{
+  margin-left: 10px !important;
+}
+.btne{
+  margin-left: 10px;
+}
+.paraqrafs{
+  margin-left: 20px;
+}
+.btnas{
+  margin-left: 20px;
+}
+  }
+  @media(min-width:375px)and (max-width:767px){
+ .bg-watch-mobile {
+    width: 100%;
+    height: 600px;
+    background-image: url('/watch2.jpeg'); /* Şəkil yolu */
+    background-size: cover;              /* Şəkli konteynerə oturt */
+    background-position: center;         /* Ortaya hizala */
+    background-repeat: no-repeat;        /* Təkrarlanmasın */
+    
+  }
+  .bg-watch{
+    display: none;
+  }
+  .percent-{
+    text-align: center;
+   font-size: 50px;
+
+  }
+  .percents{
+    text-align: center;
+   font-size: 20px;
+   padding-top: 190px;
+  }
+  .shop-i5{
+    padding-top: 10px;
+  }
+  .bg-watch-2{
+    display: none !important;
+  }
+     .bg-watch-mobile-2 {
+    width: 100%;
+    height: 600px;
+    background-image: url('/watch-4.jpg'); /* Şəkil yolu */
+    background-size: cover;              /* Şəkli konteynerə oturt */
+    background-position: center;         /* Ortaya hizala */
+    background-repeat: no-repeat;        /* Təkrarlanmasın */
+    
+  }
+  }
+.paraqrafs{
+  margin-left: 20px;
+}
+.btnas{
+  margin-left: 20px;
+
+  }
+  @media(min-width:768px)and (max-width:990px){
+    .bg-watch-mobile{
+        display: none;
+    }
+    
+      .percent-{
+    text-align: center;
+   font-size: 50px;
+
+  }
+  .percents{
+    text-align: center;
+   font-size: 20px;
+   padding-top: 190px;
+  }
+  .shop-i5{
+    padding-top: 10px;
+  }
+  .tab-a{
+    color: black;
+  }
+  .bg-watch-mobile-2{
+    display: none !important;
+  }
+   .bg-watch-mobile{
+    display: none !important;
+  }
+  }
+    @media(min-width: 991px){
+   .percent-{
+    text-align: center;
+   font-size: 66px;
+
+  }
+  .percents{
+    text-align: center;
+   font-size: 30px;
+   padding-top: 190px;
+   color: rgb(255, 255, 255);
+  }
+  .shop-i5{
+    padding-top: 10px;
+  }
+  .tab-a{
+    color: black;
+  }
+  .boba{
+    display: none !important;
+  }
+  .bg-watch-mobile-2{
+    display: none !important;
+  }
+   .bg-watch-mobile{
+    display: none !important;
+  }
+  .card-1{
+    padding-top: 345px;
+    
+  }
+  .card-1 h2{
+    font-size: 40px;
+    font-weight: 600;
+  }
+  .paraqraf{
+    font-size: 25px !important;
+    margin-left: 23px;
+    color: white !important;
+  }
+  .btne{
+    margin-left: 77px;
+  }
+.zaza{
+  margin-left: 63px;
+}
+.paraqrafs{
+  font-weight: 500;
+  font-size: 30px !important;
+  margin-left: 60px;
+
+}
+.s59{
+  margin-left: 30px;
+}
+.div-v{
+  margin-top: -100px;
+}
+
+    }
