@@ -1,0 +1,6 @@
+.bg-img-2{
+  background-image: url('');
+    background-repeat: no-repeat;     /* təkrarlanmasın */
+  background-position: center;      /* mərkəzə hizala */
+  background-size: cover;           /* şəkli konteyneri dolduracaq şəkildə ölçüləndir */
+}

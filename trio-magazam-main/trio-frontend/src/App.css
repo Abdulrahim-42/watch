@@ -1,0 +1,10 @@
+@import "tailwindcss"; 
+
+* {
+  font-family: 'Lexend Deca', sans-serif;
+  
+}
+body {
+  background-color: #F3F4F6 ;
+}
+

@@ -1,0 +1,116 @@
+@import "tailwindcss"; 
+* {
+  font-family: 'Lexend Deca', sans-serif;
+}
+.bg-img{
+    background-image: url("/images/hero1/ipad.png");
+      background-repeat: no-repeat;     /* təkrarlanmasın */
+  background-position: center !important;      /* mərkəzə hizala */
+  background-size: cover;  
+}
+.bg-qulaq {
+  background-image: url('/images/hero1/logitech-aurora-headset-opt.png');
+  background-repeat: no-repeat;     /* təkrarlanmasın */
+  background-position: center;      /* mərkəzə hizala */
+  background-size: cover;           /* şəkli konteyneri dolduracaq şəkildə ölçüləndir */
+}
+.apas{
+    font-weight: 500 !important;
+}
+.bg-ps4{
+      background-image: url('/images/hero1/new-dualsense.png');
+
+      background-repeat: no-repeat;     /* təkrarlanmasın */
+  background-position: center;      /* mərkəzə hizala */
+  background-size: cover;  
+}
+.bg-cam{
+          background-image: url('/images/hero1/instant-cameras.png');
+
+       background-repeat: no-repeat;     /* təkrarlanmasın */
+  background-position: center;      /* mərkəzə hizala */
+  background-size: cover; 
+}
+/* Əgər global CSS faylı istifadə edirsinizsə */
+.custom-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.custom-bullet {
+  width: 12px;
+  background-color: #6b7280;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 0 2px;
+}
+
+.custom-bullet-active {
+  background-color: black !important;
+  width: 24px;
+  border-radius: 6px;
+}
+.bg-img-2{
+  background-image: url('/images/hero1/pre-order-g-pixel-7.jpg');
+    background-repeat: no-repeat;     /* təkrarlanmasın */
+  background-position: center;      /* mərkəzə hizala */
+  background-size: cover;           /* şəkli konteyneri dolduracaq şəkildə ölçüləndir */
+}
+.bg-img-3{
+  background-image: url('/images/hero1/discount-on-all-smart-appliances.png');
+    background-repeat: no-repeat;     /* təkrarlanmasın */
+  background-position: center;      /* mərkəzə hizala */
+  background-size: cover;           /* şəkli konteyneri dolduracaq şəkildə ölçüləndir */
+}
+/* Swiper container üçün */
+.swiper {
+  width: 100%;
+}
+
+/* Slaydlar üçün */
+.swiper-slide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.bg-qulaq{
+  transition: background-size 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  background-size: cover;
+  background-position: center;
+}
+.bg-qulaq:hover {
+  background-size: 115%;
+}
+
+.bg-ps4{
+  transition: background-size 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  background-size: cover;
+  background-position: center;
+}
+.bg-ps4:hover{
+  background-size: 115%;
+}
+
+.bg-cam{
+  transition: background-size 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  background-size: cover;
+  background-position: center;
+}
+.bg-cam:hover{
+  background-size: 115%;
+}
+@media(min-width:300px) and (max-width:700px){
+  .swiper {
+  width: 100%;
+  border-radius: 20px;
+}
+.bg-qulaq,.bg-ps4,.bg-cam {
+  width: 100%;
+  
+ 
+  margin: auto !important;   
+}
+
+}
