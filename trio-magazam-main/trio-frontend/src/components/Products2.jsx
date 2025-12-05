@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useGetProductsQuery, useFilterProductsQuery } from "../redux/api/productsApi";
+import { useGetCategoriesQuery } from "../redux/api/categoryApi";
 import { Link } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { Heart, GitCompare, ZoomIn, SlidersHorizontal } from 'lucide-react';
@@ -248,7 +249,16 @@ const Products2 = () => {
   const [priceMin, setPriceMin] = useState(0);
   const [priceMax, setPriceMax] = useState(1299);
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedSubcategory, setSelectedSubcategory] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  // Categories from API
+  const { data: categoriesData } = useGetCategoriesQuery();
+  const categories = categoriesData?.categories || [];
+  
+  // Seçilmiş kateqoriyanın alt kateqoriyalarını tap
+  const selectedCategoryData = categories.find((cat) => cat.name === selectedCategory);
+  const availableSubcategories = selectedCategoryData?.subcategories || [];
 
   // Tüm ürünleri getir
   const { data: allProductsData, error: allProductsError, isError: allProductsIsError, isLoading: allProductsLoading } = useGetProductsQuery();
@@ -271,33 +281,26 @@ const Products2 = () => {
     }
   }, [allProductsIsError, filteredIsError, allProductsError, filteredError]);
 
-  // Dynamic categories from products
-  const dynamicCategories = useMemo(() => {
-    const products = allProductsData?.products || [];
-    const categoryObj = products.reduce((acc, product) => {
-      const category = product.category;
-      if (category) {
-        acc[category] = (acc[category] || 0) + 1;
-      }
-      return acc;
-    }, {});
-    
-    return Object.entries(categoryObj).map(([category, count]) => ({ category, count }));
-  }, [allProductsData]);
+  // Kateqoriya dəyişdikdə alt kateqoriyanı sıfırla
+  useEffect(() => {
+    if (selectedCategory) {
+      setSelectedSubcategory("");
+    }
+  }, [selectedCategory]);
 
   // Filtered products - FİLTRELEME MANTIĞI DÜZELTİLDİ
   const filteredProducts = useMemo(() => {
     // Hangi veriyi kullanacağımızı belirle
-    const productsToFilter = selectedCategory 
+    let productsToFilter = selectedCategory 
       ? filteredData?.products || []  // Kategori seçiliyse filtrelenmiş veriyi kullan
       : allProductsData?.products || []; // Kategori seçili değilse tüm ürünleri kullan
 
-    console.log("Filtering products:", {
-      selectedCategory,
-      allProductsCount: allProductsData?.products?.length,
-      filteredDataCount: filteredData?.products?.length,
-      productsToFilterCount: productsToFilter.length
-    });
+    // Alt kateqoriya filtresi
+    if (selectedSubcategory) {
+      productsToFilter = productsToFilter.filter(product => 
+        product.subcategory === selectedSubcategory
+      );
+    }
 
     // Fiyat filtresini uygula
     const priceFiltered = productsToFilter.filter(product => {
@@ -305,11 +308,10 @@ const Products2 = () => {
       return price >= priceMin && price <= priceMax;
     });
 
-    console.log("After price filter:", priceFiltered.length);
-
     return priceFiltered;
   }, [
-    selectedCategory, 
+    selectedCategory,
+    selectedSubcategory,
     allProductsData, 
     filteredData, 
     priceMin, 
@@ -372,13 +374,32 @@ const Products2 = () => {
               className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
             >
               <option value="">Bütün Məhsullar</option>
-              {dynamicCategories.map((item) => (
-                <option key={item.category} value={item.category}>
-                  {item.category} ({item.count})
+              {categories.map((category) => (
+                <option key={category._id} value={category.name}>
+                  {category.name}
                 </option>
               ))}
             </select>
           </div>
+
+          {/* Subcategory Filter */}
+          {selectedCategory && availableSubcategories.length > 0 && (
+            <div className="mb-6">
+              <label className="block mb-3 font-medium text-gray-700">Alt Kateqoriya</label>
+              <select
+                value={selectedSubcategory}
+                onChange={(e) => setSelectedSubcategory(e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+              >
+                <option value="">Bütün Alt Kateqoriyalar</option>
+                {availableSubcategories.map((subcategory) => (
+                  <option key={subcategory._id} value={subcategory.name}>
+                    {subcategory.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           
           {/* Price Filter */}
           <div className="mb-4">
@@ -442,6 +463,7 @@ const Products2 = () => {
               setPriceMin(0);
               setPriceMax(1299);
               setSelectedCategory("");
+              setSelectedSubcategory("");
             }}
           >
             Filtrləri Sıfırla

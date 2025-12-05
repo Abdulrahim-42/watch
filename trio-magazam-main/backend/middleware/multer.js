@@ -33,3 +33,17 @@ const upload = multer({
 }).array('images', 10); // ✅ 'images' fieldını gözləyir və maksimum 10 fayl
 
 export const uploadImages = upload;
+
+// Tək şəkil yükləmək üçün
+export const uploadImage = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (allowedMimeTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Yalnız şəkil formatları yükləyə bilərsiniz!'), false);
+    }
+  }
+}).single('image'); // ✅ 'image' fieldını gözləyir və tək fayl

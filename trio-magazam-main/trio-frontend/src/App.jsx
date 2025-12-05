@@ -14,6 +14,7 @@ import AdminProducts from './components/admin/AdminProducts'
 import EditProduct from './components/admin/EditProduct'
 import AdminBlog from './components/admin/AdminBlog'
 import AddBlogs from './components/admin/AddBlogs'
+import CategoryManagement from './components/admin/CategoryManagement'
 
 import PrivateRoute from './components/PrivateRoute'
 import AdminRoute from './components/AdminRoues'   // ⭐ <-- BURADA IMPORT ET
@@ -24,6 +25,7 @@ import SebetCart from './components/ShoppingCard'
 import FavoriteButton from './components/Favorites'
 import UpdateName from './components/Uptade'
 import EcommerceApp from './components/Filter'
+import AdminDashboard from './components/admin/AdminDashboard'
 
 function App() {
   return (
@@ -59,6 +61,13 @@ function App() {
             </AdminRoute>
           } />
 
+
+                    <Route path='/admin/admin-dashboard' element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          } />
+
           <Route path='/admin/edit-product/:id' element={
             <AdminRoute>
               <EditProduct />
@@ -74,6 +83,12 @@ function App() {
           <Route path='/admin/add-blog' element={
             <AdminRoute>
               <AddBlogs />
+            </AdminRoute>
+          } />
+
+          <Route path='/admin/categories' element={
+            <AdminRoute>
+              <CategoryManagement />
             </AdminRoute>
           } />
         </Routes>

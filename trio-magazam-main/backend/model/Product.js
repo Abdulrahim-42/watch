@@ -34,6 +34,12 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: [true, "Kateqoriya daxil edin"],
     },
+    
+    // Alt kateqoriya
+    subcategory: {
+      type: String,
+      default: "",
+    },
 
     // 🔥 Dinamik SPEC key:value
     // Frontend-dən istədiyin qədər özün əlavə edirsən

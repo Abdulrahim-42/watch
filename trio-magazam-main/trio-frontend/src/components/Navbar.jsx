@@ -11,7 +11,7 @@ import {
 } from "../redux/api/productsApi"
 import SebetCart from "./ShoppingCard"
 
-// Desktop üçün İstifadəçi Menyusu (admin linkləri daxil)
+// Desktop üçün İstifadəçi Menyusu
 const UserMenu = ({ name, email, imageUrl, role, onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
@@ -55,62 +55,43 @@ const UserMenu = ({ name, email, imageUrl, role, onLogout }) => {
             <p className="text-xs text-gray-500 truncate">{email}</p>
           </div>
           
-          {/* Ümumi Menyu */}
-          <div className="mt-2">
-            <button className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-gray-700 transition-colors hover:bg-[#f5f2fa] hover:text-[#5C4977] cursor-pointer">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              Settings
-            </button>
-            <button className="w-full px-4 py-2.5 text-left text-sm text-gray-700 transition-colors hover:bg-[#f5f2fa] hover:text-[#5C4977] cursor-pointer">
-              Help
-            </button>
-          </div>
-
-          {/* Yalnız adminlər üçün linklər */}
+          {/* Yalnız adminlər üçün Admin Dashboard linki */}
           {role === "admin" && (
-            <div className="mt-2 border-t border-gray-100 pt-2">
-              <div className="px-3 py-1 text-xs font-medium text-gray-500 uppercase tracking-wider">Admin Panel</div>
+            <div className="mt-2">
               <Link
-                to="/admin/adminproducts"
-                className="block px-4 py-2.5 text-sm text-gray-700 transition-colors hover:bg-[#f5f2fa] hover:text-[#5C4977] cursor-pointer"
+                to="/admin/admin-dashboard"
+                className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-[#5C4977] hover:bg-[#f5f2fa] cursor-pointer"
                 onClick={() => setIsOpen(false)}
               >
-                Admin Products
-              </Link>
-              <Link
-                to="/admin/add-products"
-                className="block px-4 py-2.5 text-sm text-gray-700 transition-colors hover:bg-[#f5f2fa] hover:text-[#5C4977] cursor-pointer"
-                onClick={() => setIsOpen(false)}
-              >
-                Add Product
-              </Link>
-              <Link
-                to="/admin/admin-blogs"
-                className="block px-4 py-2.5 text-sm text-gray-700 transition-colors hover:bg-[#f5f2fa] hover:text-[#5C4977] cursor-pointer"
-                onClick={() => setIsOpen(false)}
-              >
-                Admin Blog
-              </Link>
-              <Link
-                to="/admin/add-blog"
-                className="block px-4 py-2.5 text-sm text-gray-700 transition-colors hover:bg-[#f5f2fa] hover:text-[#5C4977] cursor-pointer"
-                onClick={() => setIsOpen(false)}
-              >
-                Add Blog
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Admin Dashboard
               </Link>
             </div>
           )}
 
+          <div className="mt-2">
+            <Link
+              to="/profile"
+              className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-[#f5f2fa] hover:text-[#5C4977] cursor-pointer"
+              onClick={() => setIsOpen(false)}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              Profil
+            </Link>
+          </div>
+
           <div className="mt-2 border-t border-gray-100 pt-2">
             <button
               onClick={onLogout}
-              className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-red-600 transition-colors hover:bg-red-50 cursor-pointer"
+              className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
-              Logout
+              Çıxış
             </button>
           </div>
         </div>
@@ -749,8 +730,8 @@ export default function MetaShopHeader() {
           </div>
 
           <div className="h-screen overflow-y-auto pb-20">
-            {/* User Section */}
-            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            {/* User Section - ORİJİNAL YAPIDAN SADƏCƏ ADMIN ÜÇÜN DƏYİŞİKLİK */}
+            <div className={`px-4 py-3 border-b border-gray-200 ${safeIsAuthenticated && getUserRole() === "admin" ? "bg-gradient-to-r from-[#f8f7fa] to-[#f0edf5]" : "bg-gray-50"}`}>
               {safeIsAuthenticated ? (
                 <div className="flex items-center gap-3">
                   {getUserAvatar() ? (
@@ -792,6 +773,23 @@ export default function MetaShopHeader() {
                 </div>
               )}
             </div>
+
+            {/* Admin Dashboard Link for Mobile */}
+            {safeIsAuthenticated && getUserRole() === "admin" && (
+              <div className="border-b border-gray-200">
+                <Link
+                  to="/admin/admin-dashboard"
+                  className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-[#5C4977] hover:bg-[#f5f2fa] border-b border-gray-100 cursor-pointer"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span>Admin Dashboard</span>
+                </Link>
+              </div>
+            )}
 
             {/* Categories */}
             <div className="border-b border-gray-200">
@@ -860,30 +858,6 @@ export default function MetaShopHeader() {
                 </button>
               ))}
             </div>
-
-            {/* Admin Links for Mobile */}
-            {safeIsAuthenticated && getUserRole() === "admin" && (
-              <div className="border-b border-gray-200">
-                <div className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                  Admin Panel
-                </div>
-                {[
-                  { to: "/admin/adminproducts", label: "Admin Products" },
-                  { to: "/admin/add-products", label: "Add Product" },
-                  { to: "/admin/admin-blogs", label: "Admin Blog" },
-                  { to: "/admin/add-blog", label: "Add Blog" },
-                ].map((item, index) => (
-                  <Link
-                    key={index}
-                    to={item.to}
-                    className="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:text-purple-900 hover:bg-purple-50 border-b border-gray-100 cursor-pointer"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            )}
           </div>
         </div>
 

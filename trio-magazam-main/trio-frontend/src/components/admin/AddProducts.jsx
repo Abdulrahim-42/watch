@@ -1,8 +1,10 @@
-// src/pages/admin/AddProduct.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAddProductMutation } from "../../redux/api/productsApi";
+import { useGetCategoriesQuery } from "../../redux/api/categoryApi";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
+import { FaImage, FaTag, FaInfoCircle, FaUpload, FaStar, FaTrash, FaBoxOpen } from "react-icons/fa";
+import { HiOutlinePhotograph } from "react-icons/hi";
 
 const AddProduct = () => {
   const [formData, setFormData] = useState({
@@ -12,31 +14,45 @@ const AddProduct = () => {
     price: "",
     description: "",
     category: "",
+    subcategory: "",
     stock: "",
-    specs: "", // 🔥 Texniki xüsusiyyətlər üçün tək input
+    specs: "",
   });
+
+  const { data: categoriesData } = useGetCategoriesQuery();
+  const categories = categoriesData?.categories || [];
+  
+  // Seçilmiş kateqoriyanın alt kateqoriyalarını tap
+  const selectedCategory = categories.find((cat) => cat.name === formData.category);
+  const subcategories = selectedCategory?.subcategories || [];
 
   const [images, setImages] = useState([]);
   const [previews, setPreviews] = useState([]);
-  const [mainImageIndex, setMainImageIndex] = useState(0); // Əsas şəkil indeksi
+  const [mainImageIndex, setMainImageIndex] = useState(0);
 
   const [addProduct, { isLoading }] = useAddProductMutation();
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => {
+      // Əgər kateqoriya dəyişirsə, alt kateqoriyanı sıfırla
+      if (name === "category") {
+        return { ...prev, [name]: value, subcategory: "" };
+      }
+      return { ...prev, [name]: value };
+    });
   };
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files || []);
 
-    // Maksimum 6 şəkil limiti
     if (images.length + files.length > 6) {
       Swal.fire({
         title: "Xəta!",
         text: "Maksimum 6 şəkil əlavə edə bilərsiniz",
         icon: "warning",
+        confirmButtonColor: "#5C4977",
       });
       return;
     }
@@ -47,6 +63,7 @@ const AddProduct = () => {
           title: "Xəta!",
           text: `${file.name} faylının ölçüsü çox böyükdür (maksimum 5MB)`,
           icon: "warning",
+          confirmButtonColor: "#5C4977",
         });
         return false;
       }
@@ -55,25 +72,21 @@ const AddProduct = () => {
 
     setImages((prev) => [...prev, ...validFiles]);
 
-    // Yeni şəkillər üçün preview yarat
     const newPreviews = validFiles.map((file) => URL.createObjectURL(file));
     setPreviews((prev) => [...prev, ...newPreviews]);
   };
 
   const removeImage = (index) => {
-    // Preview URL-ni təmizlə
     if (previews[index] && previews[index].startsWith("blob:")) {
       URL.revokeObjectURL(previews[index]);
     }
 
-    // Şəkilləri və preview-ləri yenilə
     const newImages = images.filter((_, i) => i !== index);
     const newPreviews = previews.filter((_, i) => i !== index);
 
     setImages(newImages);
     setPreviews(newPreviews);
 
-    // Əsas şəkil silinirsə, birinci şəkili əsas et
     if (index === mainImageIndex) {
       setMainImageIndex(0);
     } else if (index < mainImageIndex) {
@@ -94,13 +107,17 @@ const AddProduct = () => {
       description: "Açıqlama",
       category: "Kateqoriya",
       stock: "Stok",
-      // seller silindi ✅
     };
 
     for (const [field, fieldName] of Object.entries(requiredFields)) {
       if (!formData[field] || formData[field].toString().trim() === "") {
         return `${fieldName} sahəsi tələb olunur`;
       }
+    }
+    
+    // Əgər kateqoriya seçilibsə və alt kateqoriyalar varsa, alt kateqoriya tələb olunur
+    if (formData.category && subcategories.length > 0 && !formData.subcategory) {
+      return "Alt kateqoriya seçilməlidir";
     }
 
     if (isNaN(formData.price) || Number(formData.price) <= 0) {
@@ -123,41 +140,36 @@ const AddProduct = () => {
 
     const validationError = validateForm();
     if (validationError) {
-      Swal.fire({ title: "Xəta", text: validationError, icon: "error" });
+      Swal.fire({ 
+        title: "Xəta", 
+        text: validationError, 
+        icon: "error",
+        confirmButtonColor: "#5C4977",
+      });
       return;
     }
 
     try {
       const formDataToSend = new FormData();
 
-      // Bütün formData sahələrini əlavə et, o cümlədən specs (string kimi)
       Object.entries(formData).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== "") {
+        // subcategory-ni ayrıca idarə et
+        if (key === "subcategory") {
+          if (value && value.trim() !== "") {
+            formDataToSend.append(key, value.toString().trim());
+          }
+        } else if (value !== undefined && value !== null && value !== "") {
           formDataToSend.append(key, value.toString());
         }
       });
 
-      // Əsas şəkil indeksini əlavə et
       formDataToSend.append("mainImageIndex", mainImageIndex.toString());
 
-      // Şəkillər
       images.forEach((file) => {
         formDataToSend.append("images", file);
       });
 
-      console.log("=== GÖNDƏRİLƏN FORMDATA ===");
-      console.log("Əsas şəkil indeksi:", mainImageIndex);
-      for (let [key, value] of formDataToSend.entries()) {
-        if (key === "images") {
-          console.log(`${key}:`, value.name, `(${value.type})`);
-        } else {
-          console.log(`${key}:`, value);
-        }
-      }
-      console.log("=========================");
-
       const result = await addProduct(formDataToSend).unwrap();
-      console.log("✅ Uğurlu cavab:", result);
 
       previews.forEach((url) => {
         if (url.startsWith("blob:")) {
@@ -172,6 +184,7 @@ const AddProduct = () => {
         price: "",
         description: "",
         category: "",
+        subcategory: "",
         stock: "",
         specs: "",
       });
@@ -185,6 +198,7 @@ const AddProduct = () => {
         icon: "success",
         timer: 2000,
         showConfirmButton: false,
+        confirmButtonColor: "#5C4977",
       }).then(() => {
         navigate("/admin/adminproducts");
       });
@@ -198,8 +212,7 @@ const AddProduct = () => {
       } else if (error?.data?.message) {
         errorMessage = error.data.message;
       } else if (error?.status === "FETCH_ERROR") {
-        errorMessage =
-          "Serverlə əlaqə problemi. Zəhmət olmasa bir daha yoxlayın.";
+        errorMessage = "Serverlə əlaqə problemi. Zəhmət olmasa bir daha yoxlayın.";
       } else if (error?.status === 500) {
         errorMessage = "Server xətası. Məlumatların düzgünlüyünü yoxlayın.";
       }
@@ -209,282 +222,346 @@ const AddProduct = () => {
         text: errorMessage,
         icon: "error",
         confirmButtonText: "Başa düşdüm",
+        confirmButtonColor: "#5C4977",
       });
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-6 text-gray-800">
-        Yeni Məhsul Əlavə Et
-      </h1>
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Əsas məlumatlar */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Məhsul Adı *
-            </label>
-            <input
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              placeholder="Məhsul adını daxil edin"
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
+    <div className="min-h-screen bg-gradient-to-br from-[#f8f7fa] to-[#f0edf5] pt-24 px-4 pb-8">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-[#5C4977] mb-2">Yeni Məhsul Əlavə Et</h1>
+              <p className="text-gray-600">Yeni məhsulun məlumatlarını daxil edin</p>
+            </div>
+            <button
+              onClick={() => navigate("/admin/adminproducts")}
+              className="text-[#5C4977] hover:text-[#5C4977]/70 font-medium transition-colors border border-[#5C4977] hover:bg-[#5C4977]/5 px-4 py-2 rounded-xl"
+            >
+              Geri qayıt
+            </button>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Brend *
-            </label>
-            <input
-              name="brand"
-              value={formData.brand}
-              onChange={handleInputChange}
-              placeholder="Brend adını daxil edin"
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Model *
-            </label>
-            <input
-              name="model"
-              value={formData.model}
-              onChange={handleInputChange}
-              placeholder="Model adını daxil edin"
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Qiymət *
-            </label>
-            <input
-              name="price"
-              type="number"
-              value={formData.price}
-              onChange={handleInputChange}
-              placeholder="Qiyməti daxil edin"
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              step="0.01"
-              min="0"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Stok *
-            </label>
-            <input
-              name="stock"
-              type="number"
-              value={formData.stock}
-              onChange={handleInputChange}
-              placeholder="Stok miqdarını daxil edin"
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              min="0"
-              required
-            />
-          </div>
-          {/* Satıcı sahəsi silindi ✅ */}
         </div>
 
-        {/* 🔥 Dinamik Kateqoriya (Input) */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Kateqoriya *
-          </label>
-          <input
-            name="category"
-            value={formData.category}
-            onChange={handleInputChange}
-            placeholder="Məsələn: Watch, Phone, Electronics, Aksessuar..."
-            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            required
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            Kateqoriyanı sərbəst yaza bilərsən. Məsələn: <b>Watch</b>,{" "}
-            <b>Gaming Laptop</b>, <b>Smart TV</b> və s.
-          </p>
-        </div>
-
-        {/* Açıqlama */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Açıqlama *
-          </label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleInputChange}
-            placeholder="Məhsul haqqında ətraflı məlumat"
-            rows="4"
-            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            required
-          />
-        </div>
-
-        {/* 🔧 Texniki Xüsusiyyətlər – tək input */}
-        <div className="border-t pt-4">
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">
-            Texniki Xüsusiyyətlər (İstəyə bağlı)
-          </h3>
-
-          <textarea
-            name="specs"
-            value={formData.specs}
-            onChange={handleInputChange}
-            placeholder="Məsələn: 16GB RAM, 512GB SSD, Intel i7, 144Hz ekran..."
-            rows="3"
-            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            Texniki xüsusiyyətləri mətn kimi yaza bilərsən. Məsələn:
-            <br />
-            <i>
-              16GB RAM, 512GB SSD, RTX 4060, 144Hz, IPS Panel, 75Wh batareya və
-              s.
-            </i>
-          </p>
-        </div>
-
-        {/* Şəkillər */}
-        <div className="border-t pt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-3">
-            Məhsul Şəkilləri * (Maksimum 6 şəkil)
-          </label>
-
-          <input
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={handleFileChange}
-            disabled={images.length >= 6}
-            className="w-full p-2 border border-gray-300 rounded-md file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50"
-          />
-
-          <div className="mt-4">
-            <h4 className="font-medium text-gray-700 mb-2">
-              Əsas Şəkil (Ön şəkil)
-            </h4>
-            {previews.length > 0 && (
-              <div className="mb-4 p-4 border-2 border-green-500 rounded-lg bg-green-50">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={previews[mainImageIndex]}
-                    alt="Əsas şəkil"
-                    className="w-32 h-32 object-cover border-2 border-green-500 rounded-lg shadow-md"
+        {/* Form Container */}
+        <div className="bg-white rounded-2xl shadow-xl border border-[#5C4977]/10 p-6 md:p-8">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Əsas məlumatlar */}
+            <div className="border-b border-[#5C4977]/10 pb-6">
+              <h2 className="text-xl font-bold text-[#5C4977] mb-6 flex items-center gap-2">
+                <FaInfoCircle className="h-5 w-5" />
+                Əsas Məlumatlar
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-[#5C4977] mb-2">
+                    Məhsul Adı *
+                  </label>
+                  <input
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Məhsul adını daxil edin"
+                    className="w-full p-3 border border-[#5C4977]/20 rounded-xl focus:ring-2 focus:ring-[#5C4977] focus:border-transparent transition-colors"
+                    required
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#5C4977] mb-2">
+                    Brend *
+                  </label>
+                  <input
+                    name="brand"
+                    value={formData.brand}
+                    onChange={handleInputChange}
+                    placeholder="Brend adını daxil edin"
+                    className="w-full p-3 border border-[#5C4977]/20 rounded-xl focus:ring-2 focus:ring-[#5C4977] focus:border-transparent transition-colors"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#5C4977] mb-2">
+                    Model *
+                  </label>
+                  <input
+                    name="model"
+                    value={formData.model}
+                    onChange={handleInputChange}
+                    placeholder="Model adını daxil edin"
+                    className="w-full p-3 border border-[#5C4977]/20 rounded-xl focus:ring-2 focus:ring-[#5C4977] focus:border-transparent transition-colors"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#5C4977] mb-2">
+                    Qiymət (AZN) *
+                  </label>
+                  <input
+                    name="price"
+                    type="number"
+                    value={formData.price}
+                    onChange={handleInputChange}
+                    placeholder="Qiyməti daxil edin"
+                    className="w-full p-3 border border-[#5C4977]/20 rounded-xl focus:ring-2 focus:ring-[#5C4977] focus:border-transparent transition-colors"
+                    step="0.01"
+                    min="0"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#5C4977] mb-2">
+                    Stok Miqdarı *
+                  </label>
+                  <input
+                    name="stock"
+                    type="number"
+                    value={formData.stock}
+                    onChange={handleInputChange}
+                    placeholder="Stok miqdarını daxil edin"
+                    className="w-full p-3 border border-[#5C4977]/20 rounded-xl focus:ring-2 focus:ring-[#5C4977] focus:border-transparent transition-colors"
+                    min="0"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#5C4977] mb-2">
+                    Kateqoriya *
+                  </label>
+                  <select
+                    name="category"
+                    value={formData.category}
+                    onChange={handleInputChange}
+                    className="w-full p-3 border border-[#5C4977]/20 rounded-xl focus:ring-2 focus:ring-[#5C4977] focus:border-transparent transition-colors"
+                    required
+                  >
+                    <option value="">Kateqoriya seçin</option>
+                    {categories.map((category) => (
+                      <option key={category._id} value={category.name}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {formData.category && subcategories.length > 0 && (
                   <div>
-                    <span className="bg-green-500 text-white px-2 py-1 rounded text-sm font-medium">
-                      Əsas Şəkil
-                    </span>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Bu şəkil məhsulun ön şəkili kimi göstəriləcək
+                    <label className="block text-sm font-medium text-[#5C4977] mb-2">
+                      Alt Kateqoriya *
+                    </label>
+                    <select
+                      name="subcategory"
+                      value={formData.subcategory}
+                      onChange={handleInputChange}
+                      className="w-full p-3 border border-[#5C4977]/20 rounded-xl focus:ring-2 focus:ring-[#5C4977] focus:border-transparent transition-colors"
+                      required
+                    >
+                      <option value="">Alt kateqoriya seçin</option>
+                      {subcategories.map((subcategory) => (
+                        <option key={subcategory._id} value={subcategory.name}>
+                          {subcategory.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Açıqlama */}
+            <div className="border-b border-[#5C4977]/10 pb-6">
+              <h2 className="text-xl font-bold text-[#5C4977] mb-6 flex items-center gap-2">
+                <FaBoxOpen className="h-5 w-5" />
+                Açıqlama
+              </h2>
+              <div>
+                <label className="block text-sm font-medium text-[#5C4977] mb-2">
+                  Məhsul Haqqında *
+                </label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  placeholder="Məhsul haqqında ətraflı məlumat yazın..."
+                  rows="4"
+                  className="w-full p-3 border border-[#5C4977]/20 rounded-xl focus:ring-2 focus:ring-[#5C4977] focus:border-transparent transition-colors"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Texniki Xüsusiyyətlər */}
+            <div className="border-b border-[#5C4977]/10 pb-6">
+              <h2 className="text-xl font-bold text-[#5C4977] mb-6 flex items-center gap-2">
+                <FaTag className="h-5 w-5" />
+                Texniki Xüsusiyyətlər
+              </h2>
+              <div>
+                <label className="block text-sm font-medium text-[#5C4977] mb-2">
+                  Xüsusiyyətlər (İstəyə bağlı)
+                </label>
+                <textarea
+                  name="specs"
+                  value={formData.specs}
+                  onChange={handleInputChange}
+                  placeholder="Məsələn: 16GB RAM, 512GB SSD, Intel i7, 144Hz ekran..."
+                  rows="3"
+                  className="w-full p-3 border border-[#5C4977]/20 rounded-xl focus:ring-2 focus:ring-[#5C4977] focus:border-transparent transition-colors"
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  Texniki xüsusiyyətləri mətn kimi yaza bilərsiniz
+                </p>
+              </div>
+            </div>
+
+            {/* Şəkillər */}
+            <div className="pb-6">
+              <h2 className="text-xl font-bold text-[#5C4977] mb-6 flex items-center gap-2">
+                <FaImage className="h-5 w-5" />
+                Məhsul Şəkilləri
+              </h2>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-[#5C4977] mb-3">
+                  Şəkilləri seçin (Maksimum 6 şəkil)
+                </label>
+                <div className="relative">
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    disabled={images.length >= 6}
+                    className="w-full p-3 border-2 border-dashed border-[#5C4977]/30 rounded-xl file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#5C4977]/10 file:text-[#5C4977] hover:file:bg-[#5C4977]/20 disabled:opacity-50 cursor-pointer"
+                  />
+                  <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                    <HiOutlinePhotograph className="h-5 w-5 text-[#5C4977]/60" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Əsas Şəkil */}
+              {previews.length > 0 && (
+                <div className="mb-6 p-4 border-2 border-green-500 rounded-xl bg-green-50">
+                  <div className="flex items-center gap-4">
+                    <img
+                      src={previews[mainImageIndex]}
+                      alt="Əsas şəkil"
+                      className="w-32 h-32 object-cover border-2 border-green-500 rounded-lg shadow-md"
+                    />
+                    <div>
+                      <div className="inline-flex items-center gap-2 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium mb-2">
+                        <FaStar className="h-3 w-3" />
+                        Əsas Şəkil
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        Bu şəkil məhsulun ön şəkili kimi göstəriləcək
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Şəkil Previews */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {previews.length > 0 ? (
+                  previews.map((preview, index) => (
+                    <div key={index} className="relative group">
+                      <div className="aspect-square overflow-hidden rounded-lg border-2 border-[#5C4977]/20 group-hover:border-[#5C4977]/40 transition-colors">
+                        <img
+                          src={preview}
+                          alt={`Preview ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      
+                      {index === mainImageIndex && (
+                        <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                          Əsas
+                        </div>
+                      )}
+
+                      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {index !== mainImageIndex && (
+                          <button
+                            type="button"
+                            onClick={() => setAsMainImage(index)}
+                            className="bg-[#5C4977] hover:bg-[#5C4977]/90 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs shadow-md"
+                            title="Əsas şəkil et"
+                          >
+                            <FaStar className="h-3 w-3" />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="bg-red-500 hover:bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs shadow-md"
+                          title="Sil"
+                        >
+                          <FaTrash className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-full flex flex-col items-center justify-center p-8 border-2 border-dashed border-[#5C4977]/20 rounded-xl bg-[#5C4977]/5">
+                    <FaImage className="h-12 w-12 text-[#5C4977]/40 mb-4" />
+                    <p className="text-[#5C4977]/70 text-center">
+                      Heç bir şəkil əlavə edilməyib
                     </p>
                   </div>
-                </div>
+                )}
               </div>
-            )}
-          </div>
 
-          <div className="flex gap-3 mt-3 flex-wrap">
-            {previews.length > 0 ? (
-              previews.map((preview, index) => (
-                <div key={index} className="relative group">
-                  <img
-                    src={preview}
-                    alt={`Preview ${index + 1}`}
-                    className={`w-24 h-24 object-cover border rounded-md shadow-sm ${
-                      index === mainImageIndex
-                        ? "border-2 border-green-500"
-                        : "border-gray-300"
-                    }`}
-                  />
-                  <div className="absolute top-0 right-0 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      type="button"
-                      onClick={() => removeImage(index)}
-                      className="bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
-                    >
-                      ×
-                    </button>
-                    {index !== mainImageIndex && (
-                      <button
-                        type="button"
-                        onClick={() => setAsMainImage(index)}
-                        className="bg-green-500 hover:bg-green-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
-                        title="Əsas şəkil et"
-                      >
-                        ★
-                      </button>
-                    )}
-                  </div>
-                  {index === mainImageIndex && (
-                    <div className="absolute bottom-0 left-0 right-0 bg-green-500 text-white text-xs text-center py-1">
-                      Əsas
-                    </div>
-                  )}
-                </div>
-              ))
-            ) : (
-              <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center text-gray-400">
-                <span>Şəkil yoxdur</span>
+              <div className="flex items-center justify-between mt-4">
+                <p className="text-sm text-gray-500">
+                  {previews.length}/6 şəkil əlavə edilib • Maksimum ölçü: 5MB
+                </p>
+                <button
+                  type="button"
+                  onClick={() => document.querySelector('input[type="file"]').click()}
+                  disabled={images.length >= 6}
+                  className="text-sm text-[#5C4977] hover:text-[#5C4977]/70 font-medium transition-colors disabled:opacity-50"
+                >
+                  <FaUpload className="inline mr-1 h-4 w-4" />
+                  Şəkil əlavə et
+                </button>
               </div>
-            )}
-          </div>
+            </div>
 
-          <p className="text-sm text-gray-500 mt-2">
-            Ən azı bir şəkil əlavə edilməlidir. Maksimum 6 şəkil. Maksimum
-            şəkil ölçüsü: 5MB.
-            {previews.length > 0 && " ★ ilə əsas şəkili seçə bilərsiniz."}
-          </p>
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-[#5C4977] text-white py-4 px-4 rounded-xl font-medium hover:bg-[#5C4977]/90 focus:ring-2 focus:ring-[#5C4977] focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#5C4977]/20"
+            >
+              {isLoading ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                  Məhsul əlavə edilir...
+                </div>
+              ) : (
+                'Məhsulu Əlavə Et'
+              )}
+            </button>
+          </form>
         </div>
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold py-3 px-4 rounded-md transition-colors duration-200 flex items-center justify-center"
-        >
-          {isLoading ? (
-            <>
-              <svg
-                className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              Əlavə edilir...
-            </>
-          ) : (
-            "Məhsulu Əlavə Et"
-          )}
-        </button>
-      </form>
+        {/* Footer */}
+        <div className="text-center mt-8">
+          <p className="text-sm text-gray-500">
+            © 2024 META SHOP Admin Panel. Bütün hüquqlar qorunur.
+          </p>
+        </div>
+      </div>
     </div>
   );
 };

@@ -159,6 +159,7 @@ export const newProduct = catchAsyncErrors(async (req, res, next) => {
       price: Number(req.body.price),
       description: req.body.description,
       category: req.body.category,
+      subcategory: req.body.subcategory || "",
       stock: Number(req.body.stock),
       specs: specs, // string
       images: images,
@@ -265,6 +266,7 @@ export const updateProduct = catchAsyncErrors(async (req, res) => {
         : product.price,
     description: req.body.description ?? product.description,
     category: req.body.category ?? product.category,
+    subcategory: req.body.subcategory !== undefined ? req.body.subcategory : product.subcategory,
     stock:
       req.body.stock !== undefined
         ? Number(req.body.stock)
