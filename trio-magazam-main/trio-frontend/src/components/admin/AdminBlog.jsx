@@ -48,10 +48,12 @@ const AdminBlogs = () => {
   // Seçilmiş blogun detalları gəldikcə formu yenilə
   useEffect(() => {
     if (blogDetailData && blogDetailData.blog) {
+      const blog = blogDetailData.blog;
       setFormData({
-        title: blogDetailData.blog.title,
-        description: blogDetailData.blog.description,
-        content: blogDetailData.blog.content,
+        title: blog.title || "",
+        shortContent: blog.shortContent || "",
+        content: blog.content || "",
+        date: blog.date ? new Date(blog.date).toISOString().split('T')[0] : "",
       });
       // Yeni şəkillər və silinən şəkilləri sıfırla
       setNewImages([]);
@@ -87,11 +89,16 @@ const AdminBlogs = () => {
     const updatedData = new FormData();
     // Form məlumatlarını əlavə et
     Object.entries(formData).forEach(([key, value]) => {
-      updatedData.append(key, value);
+      if (key === "date") {
+        // Date-i ISO formatına çevir
+        updatedData.append(key, new Date(value).toISOString());
+      } else {
+        updatedData.append(key, value);
+      }
     });
     // Yeni şəkilləri əlavə et
     newImages.forEach((image) => {
-      updatedData.append("newImages", image);
+      updatedData.append("images", image);
     });
     // Silinən şəkilləri əlavə et
     removedImages.forEach((imageId) => {
@@ -249,33 +256,48 @@ const AdminBlogs = () => {
                 "
               />
               <textarea
-                name="description"
-                value={formData.description}
+                name="shortContent"
+                value={formData.shortContent}
                 onChange={handleInputChange}
-                placeholder="Açıqlama"
+                placeholder="Kiçik məzmun"
+                rows="3"
                 className="
                   w-full p-2 border border-gray-300 rounded-md 
                   focus:outline-none focus:ring focus:ring-[#fe9034]/50
                 "
+                required
               ></textarea>
               <textarea
                 name="content"
                 value={formData.content}
                 onChange={handleInputChange}
-                placeholder="Məzmun"
+                placeholder="Böyük məzmun"
+                rows="8"
                 className="
                   w-full p-2 border border-gray-300 rounded-md 
                   focus:outline-none focus:ring focus:ring-[#fe9034]/50
                 "
+                required
               ></textarea>
+              <input
+                type="date"
+                name="date"
+                value={formData.date}
+                onChange={handleInputChange}
+                className="
+                  w-full p-2 border border-gray-300 rounded-md 
+                  focus:outline-none focus:ring focus:ring-[#fe9034]/50
+                "
+                required
+              />
 
               {/* Mövcud şəkillər varsa */}
               {blogDetailData &&
                 blogDetailData.blog &&
-                blogDetailData.blog.image &&
-                blogDetailData.blog.image.length > 0 && (
+                blogDetailData.blog.images &&
+                blogDetailData.blog.images.length > 0 && (
                   <div className="flex flex-wrap gap-4">
-                    {blogDetailData.blog.image.map((img) => (
+                    {blogDetailData.blog.images.map((img) => (
                       <div key={img.public_id || img.id} className="relative">
                         <img
                           src={img.url}

@@ -4,29 +4,29 @@ const BlogSchema = new mongoose.Schema(
   {
     title: {
       type: String,
-      required: true,
+      required: [true, "Başlıq tələb olunur"],
     },
-    description: {              // Yeni açıklama alanı
+    shortContent: {
       type: String,
-      required: false,          // İsteğe bağlı; gerekiyorsa true de yapabilirsiniz
+      required: [true, "Kiçik məzmun tələb olunur"],
     },
     content: {
       type: String,
-      required: true,
+      required: [true, "Böyük məzmun tələb olunur"],
     },
-    image: [
+    date: {
+      type: Date,
+      required: [true, "Tarix tələb olunur"],
+    },
+    images: [
       {
-        public_id: { type: String, required: false },
-        url: { type: String, required: false },
+        public_id: { type: String, required: true },
+        url: { type: String, required: true },
       },
     ],
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
   },
   {
-    timestamps: true, // createdAt ve updatedAt otomatik oluşturulur
+    timestamps: true,
   }
 );
 

@@ -31,8 +31,8 @@ export const deleteBlog = catchAsyncErrors(async (req, res, next) => {
   }
 
   // Əgər blog yazısında şəkil varsa, bütün şəkilləri Cloudinary-dən silirik
-  if (blog.image && blog.image.length > 0) {
-    for (const img of blog.image) {
+  if (blog.images && blog.images.length > 0) {
+    for (const img of blog.images) {
       await cloudinary.v2.uploader.destroy(img.public_id);
     }
   }
@@ -64,7 +64,7 @@ export const newBlog = catchAsyncErrors(async (req, res, next) => {
     }
   }
 
-  const blog = await Blog.create({ ...req.body, image: imageData });
+  const blog = await Blog.create({ ...req.body, images: imageData });
   res.status(201).json({ success: true, blog });
 });
 
@@ -76,21 +76,42 @@ export const updateBlog = catchAsyncErrors(async (req, res) => {
     return res.status(404).json({ error: "Blog tapılmadı" });
   }
 
-  // Əgər yeni şəkillər göndərilibsə, köhnə şəkilləri Cloudinary-dən silirik və yenilərini yükləyirik
-  if (req.files && req.files.length > 0) {
-    // Köhnə şəkilləri silirik
-    if (blog.image && blog.image.length > 0) {
-      for (const img of blog.image) {
-        await cloudinary.v2.uploader.destroy(img.public_id);
-      }
+  // Silinəcək şəkillər
+  if (req.body.removedImages) {
+    let removedImagesArray;
+    if (typeof req.body.removedImages === "string") {
+      removedImagesArray = [req.body.removedImages];
+    } else if (Array.isArray(req.body.removedImages)) {
+      removedImagesArray = req.body.removedImages;
     }
-    let imageData = [];
-    for (const file of req.files) {
+
+    if (removedImagesArray && removedImagesArray.length > 0) {
+      for (let publicId of removedImagesArray) {
+        try {
+          await cloudinary.v2.uploader.destroy(publicId);
+        } catch (error) {
+          console.error(`Şəkil silinərkən xəta (${publicId}):`, error);
+        }
+      }
+
+      blog.images = blog.images.filter(
+        (img) => !removedImagesArray.includes(img.public_id)
+      );
+    }
+  }
+
+  // Yeni şəkilləri yüklə
+  const newImages = [];
+  if (req.files && req.files.length > 0) {
+    for (let file of req.files) {
       try {
         const result = await cloudinary.v2.uploader.upload(file.path, {
           folder: "blogs",
         });
-        imageData.push({ public_id: result.public_id, url: result.secure_url });
+        newImages.push({
+          public_id: result.public_id,
+          url: result.secure_url,
+        });
         fs.unlinkSync(file.path);
       } catch (error) {
         return res.status(500).json({
@@ -99,10 +120,18 @@ export const updateBlog = catchAsyncErrors(async (req, res) => {
         });
       }
     }
-    req.body.image = imageData;
   }
 
-  blog = await Blog.findByIdAndUpdate(blogId, req.body, {
+  // Məlumatları yenilə
+  const updatedData = {
+    title: req.body.title ?? blog.title,
+    shortContent: req.body.shortContent ?? blog.shortContent,
+    content: req.body.content ?? blog.content,
+    date: req.body.date ? new Date(req.body.date) : blog.date,
+    images: newImages.length > 0 ? [...blog.images, ...newImages] : blog.images,
+  };
+
+  blog = await Blog.findByIdAndUpdate(blogId, updatedData, {
     new: true,
     runValidators: true,
   });

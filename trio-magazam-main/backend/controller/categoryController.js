@@ -117,7 +117,36 @@ export const addSubcategory = catchAsyncErrors(async (req, res, next) => {
     });
   }
 
-  category.subcategories.push({ name: name.trim() });
+  let imageData = null;
+
+  // Şəkil yükləmək
+  if (req.file) {
+    try {
+      const result = await cloudinary.v2.uploader.upload(req.file.path, {
+        folder: "subcategories",
+      });
+
+      imageData = {
+        public_id: result.public_id,
+        url: result.secure_url,
+      };
+
+      // Lokaldakı temp faylı sil
+      fs.unlinkSync(req.file.path);
+    } catch (error) {
+      console.error("❌ Şəkil yükləmə xətası:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Şəkil yüklənmədi",
+        message: error.message,
+      });
+    }
+  }
+
+  category.subcategories.push({ 
+    name: name.trim(),
+    image: imageData,
+  });
   await category.save();
 
   res.status(200).json({

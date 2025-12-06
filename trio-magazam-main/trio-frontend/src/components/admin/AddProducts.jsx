@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useAddProductMutation } from "../../redux/api/productsApi";
 import { useGetCategoriesQuery } from "../../redux/api/categoryApi";
+import { useGetBrandsQuery } from "../../redux/api/brandApi";
+import { useGetSpecsQuery } from "../../redux/api/specApi";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import { FaImage, FaTag, FaInfoCircle, FaUpload, FaStar, FaTrash, FaBoxOpen } from "react-icons/fa";
@@ -16,11 +18,19 @@ const AddProduct = () => {
     category: "",
     subcategory: "",
     stock: "",
-    specs: "",
   });
+
+  // Xüsusiyyətlər üçün state - spec ID-si ilə spec name saxlayacaq
+  const [selectedSpecs, setSelectedSpecs] = useState({});
 
   const { data: categoriesData } = useGetCategoriesQuery();
   const categories = categoriesData?.categories || [];
+  
+  const { data: brandsData } = useGetBrandsQuery();
+  const brands = brandsData?.brands || [];
+
+  const { data: specsData } = useGetSpecsQuery();
+  const specs = specsData?.specs || [];
   
   // Seçilmiş kateqoriyanın alt kateqoriyalarını tap
   const selectedCategory = categories.find((cat) => cat.name === formData.category);
@@ -41,6 +51,20 @@ const AddProduct = () => {
         return { ...prev, [name]: value, subcategory: "" };
       }
       return { ...prev, [name]: value };
+    });
+  };
+
+  // Xüsusiyyət seçimi üçün funksiya
+  const handleSpecChange = (specId, specName) => {
+    setSelectedSpecs(prev => {
+      // Əgər spec artıq seçilibsə, sil
+      if (prev[specId]) {
+        const newSpecs = { ...prev };
+        delete newSpecs[specId];
+        return newSpecs;
+      }
+      // Əgər spec seçilməyibsə, əlavə et
+      return { ...prev, [specId]: specName };
     });
   };
 
@@ -163,6 +187,11 @@ const AddProduct = () => {
         }
       });
 
+      // Seçilmiş xüsusiyyətləri əlavə et
+      if (Object.keys(selectedSpecs).length > 0) {
+        formDataToSend.append("specs", JSON.stringify(selectedSpecs));
+      }
+
       formDataToSend.append("mainImageIndex", mainImageIndex.toString());
 
       images.forEach((file) => {
@@ -186,8 +215,8 @@ const AddProduct = () => {
         category: "",
         subcategory: "",
         stock: "",
-        specs: "",
       });
+      setSelectedSpecs({});
       setImages([]);
       setPreviews([]);
       setMainImageIndex(0);
@@ -275,14 +304,20 @@ const AddProduct = () => {
                   <label className="block text-sm font-medium text-[#5C4977] mb-2">
                     Brend *
                   </label>
-                  <input
+                  <select
                     name="brand"
                     value={formData.brand}
                     onChange={handleInputChange}
-                    placeholder="Brend adını daxil edin"
                     className="w-full p-3 border border-[#5C4977]/20 rounded-xl focus:ring-2 focus:ring-[#5C4977] focus:border-transparent transition-colors"
                     required
-                  />
+                  >
+                    <option value="">Brend seçin</option>
+                    {brands.map((brand) => (
+                      <option key={brand._id} value={brand.name}>
+                        {brand.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
@@ -402,23 +437,61 @@ const AddProduct = () => {
             <div className="border-b border-[#5C4977]/10 pb-6">
               <h2 className="text-xl font-bold text-[#5C4977] mb-6 flex items-center gap-2">
                 <FaTag className="h-5 w-5" />
-                Texniki Xüsusiyyətlər
+                Xüsusiyyətlər (Seçmək üçün klikləyin)
               </h2>
-              <div>
-                <label className="block text-sm font-medium text-[#5C4977] mb-2">
-                  Xüsusiyyətlər (İstəyə bağlı)
-                </label>
-                <textarea
-                  name="specs"
-                  value={formData.specs}
-                  onChange={handleInputChange}
-                  placeholder="Məsələn: 16GB RAM, 512GB SSD, Intel i7, 144Hz ekran..."
-                  rows="3"
-                  className="w-full p-3 border border-[#5C4977]/20 rounded-xl focus:ring-2 focus:ring-[#5C4977] focus:border-transparent transition-colors"
-                />
-                <p className="text-xs text-gray-500 mt-2">
-                  Texniki xüsusiyyətləri mətn kimi yaza bilərsiniz
-                </p>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {specs.map((spec) => (
+                    <button
+                      key={spec._id}
+                      type="button"
+                      onClick={() => handleSpecChange(spec._id, spec.name)}
+                      className={`p-3 border rounded-xl text-left transition-all duration-200 ${
+                        selectedSpecs[spec._id]
+                          ? 'bg-[#5C4977] text-white border-[#5C4977]'
+                          : 'border-[#5C4977]/20 hover:border-[#5C4977] hover:bg-[#5C4977]/5'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{spec.name}</span>
+                        {selectedSpecs[spec._id] && (
+                          <span className="text-xs bg-white/20 px-2 py-1 rounded-full">
+                            Seçildi
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                {specs.length === 0 && (
+                  <p className="text-sm text-gray-500">
+                    Xüsusiyyət yoxdur. Admin panelindən xüsusiyyət əlavə edin.
+                  </p>
+                )}
+                {Object.keys(selectedSpecs).length > 0 && (
+                  <div className="mt-4 p-4 bg-[#5C4977]/5 rounded-xl">
+                    <p className="text-sm font-medium text-[#5C4977] mb-2">
+                      Seçilmiş Xüsusiyyətlər:
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {Object.entries(selectedSpecs).map(([specId, specName]) => (
+                        <span
+                          key={specId}
+                          className="inline-flex items-center gap-1 bg-[#5C4977] text-white px-3 py-1 rounded-full text-sm"
+                        >
+                          {specName}
+                          <button
+                            type="button"
+                            onClick={() => handleSpecChange(specId, specName)}
+                            className="ml-1 hover:text-red-200"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

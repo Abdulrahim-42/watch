@@ -12,6 +12,8 @@ import errorsMiddleware from "./middleware/errors.js";
 // import cartRouter from "./routes/cart.js"; // əgər ayrıca cart router varsa
 import blogRoutes from "./routes/blog.js";
 import categoryRoutes from "./routes/category.js";
+import brandRoutes from "./routes/brand.js";
+import specRoutes from "./routes/spec.js";
 import ChatMessage from "./model/Socket.js";
 
 // .env faylını oxuyuruq
@@ -39,6 +41,8 @@ app.use("/crud/v1", userRouter);
 // app.use("/api/v1", cartRouter);
 app.use("/api/v1", blogRoutes);
 app.use("/api/v1", categoryRoutes);
+app.use("/api/v1", brandRoutes);
+app.use("/api/v1", specRoutes);
 
 // Xətalar üçün middleware
 app.use(errorsMiddleware);

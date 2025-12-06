@@ -9,8 +9,9 @@ import { useNavigate } from "react-router-dom";
 const AddBlogs = () => {
   const [formData, setFormData] = useState({
     title: "",
-    description: "",
+    shortContent: "",
     content: "",
+    date: "",
   });
   const [images, setImages] = useState([]);
   const [createBlog] = useCreateBlogMutation();
@@ -35,11 +36,16 @@ const AddBlogs = () => {
     const form = new FormData();
     // Formdakı məlumatları FormData-ya əlavə et
     for (let key in formData) {
-      form.append(key, formData[key]);
+      if (key === "date") {
+        // Date-i ISO formatına çevir
+        form.append(key, new Date(formData[key]).toISOString());
+      } else {
+        form.append(key, formData[key]);
+      }
     }
     // Seçilən şəkilləri əlavə et
     for (let i = 0; i < images.length; i++) {
-      form.append("newImages", images[i]);
+      form.append("images", images[i]);
     }
 
     try {
@@ -61,8 +67,9 @@ const AddBlogs = () => {
       // Formu sıfırla
       setFormData({
         title: "",
-        description: "",
+        shortContent: "",
         content: "",
+        date: "",
       });
       setImages([]);
     } catch (error) {
@@ -108,26 +115,42 @@ const AddBlogs = () => {
           />
 
           <textarea
-            name="description"
-            placeholder="Açıqlama"
-            value={formData.description}
+            name="shortContent"
+            placeholder="Kiçik məzmun"
+            value={formData.shortContent}
             onChange={handleInputChange}
+            rows="3"
             className="
               w-full p-2 border border-gray-300 rounded-md 
               focus:outline-none focus:ring focus:ring-[#fe9034]/50
             "
+            required
           ></textarea>
 
           <textarea
             name="content"
-            placeholder="Məzmun"
+            placeholder="Böyük məzmun"
             value={formData.content}
+            onChange={handleInputChange}
+            rows="8"
+            className="
+              w-full p-2 border border-gray-300 rounded-md 
+              focus:outline-none focus:ring focus:ring-[#fe9034]/50
+            "
+            required
+          ></textarea>
+
+          <input
+            type="date"
+            name="date"
+            value={formData.date}
             onChange={handleInputChange}
             className="
               w-full p-2 border border-gray-300 rounded-md 
               focus:outline-none focus:ring focus:ring-[#fe9034]/50
             "
-          ></textarea>
+            required
+          />
 
           <input
             type="file"

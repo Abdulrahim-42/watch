@@ -24,6 +24,8 @@ const CategoryManagement = () => {
 
   const [subcategoryForm, setSubcategoryForm] = useState({
     name: "",
+    image: null,
+    imagePreview: null,
   });
 
   const categories = data?.categories || [];
@@ -98,6 +100,26 @@ const CategoryManagement = () => {
     }
   };
 
+  const handleSubcategoryImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        Swal.fire({
+          title: "Xəta!",
+          text: "Şəkil ölçüsü maksimum 5MB olmalıdır",
+          icon: "warning",
+          confirmButtonColor: "#5C4977",
+        });
+        return;
+      }
+      setSubcategoryForm((prev) => ({
+        ...prev,
+        image: file,
+        imagePreview: URL.createObjectURL(file),
+      }));
+    }
+  };
+
   const handleSubcategorySubmit = async (e) => {
     e.preventDefault();
 
@@ -112,9 +134,15 @@ const CategoryManagement = () => {
     }
 
     try {
+      const formData = new FormData();
+      formData.append("name", subcategoryForm.name.trim());
+      if (subcategoryForm.image) {
+        formData.append("image", subcategoryForm.image);
+      }
+
       await addSubcategory({
         categoryId: selectedCategoryId,
-        name: subcategoryForm.name.trim(),
+        formData,
       }).unwrap();
 
       Swal.fire({
@@ -126,7 +154,10 @@ const CategoryManagement = () => {
         confirmButtonColor: "#5C4977",
       });
 
-      setSubcategoryForm({ name: "" });
+      if (subcategoryForm.imagePreview) {
+        URL.revokeObjectURL(subcategoryForm.imagePreview);
+      }
+      setSubcategoryForm({ name: "", image: null, imagePreview: null });
       setShowAddSubcategoryModal(false);
       setSelectedCategoryId(null);
       refetch();
@@ -311,9 +342,20 @@ const CategoryManagement = () => {
                         {category.subcategories.map((subcategory) => (
                           <div
                             key={subcategory._id}
-                            className="bg-[#5C4977]/5 border border-[#5C4977]/20 rounded-lg p-3 flex items-center justify-between"
+                            className="bg-[#5C4977]/5 border border-[#5C4977]/20 rounded-lg p-3 flex items-center gap-3"
                           >
-                            <span className="text-[#5C4977] font-medium">{subcategory.name}</span>
+                            {subcategory.image?.url ? (
+                              <img
+                                src={subcategory.image.url}
+                                alt={subcategory.name}
+                                className="w-12 h-12 object-cover rounded-lg"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 bg-[#5C4977]/10 rounded-lg flex items-center justify-center">
+                                <FaImage className="h-6 w-6 text-[#5C4977]/40" />
+                              </div>
+                            )}
+                            <span className="text-[#5C4977] font-medium flex-1">{subcategory.name}</span>
                             <button
                               onClick={() =>
                                 handleDeleteSubcategory(category._id, subcategory._id)
@@ -445,8 +487,11 @@ const CategoryManagement = () => {
                 <h2 className="text-2xl font-bold text-[#5C4977]">Alt Kateqoriya Əlavə Et</h2>
                 <button
                   onClick={() => {
+                    if (subcategoryForm.imagePreview) {
+                      URL.revokeObjectURL(subcategoryForm.imagePreview);
+                    }
                     setShowAddSubcategoryModal(false);
-                    setSubcategoryForm({ name: "" });
+                    setSubcategoryForm({ name: "", image: null, imagePreview: null });
                     setSelectedCategoryId(null);
                   }}
                   className="text-gray-500 hover:text-gray-700 transition-colors"
@@ -473,12 +518,64 @@ const CategoryManagement = () => {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-[#5C4977] mb-2">
+                    Şəkil (İstəyə bağlı)
+                  </label>
+                  <div className="border-2 border-dashed border-[#5C4977]/30 rounded-xl p-6 text-center">
+                    {subcategoryForm.imagePreview ? (
+                      <div className="space-y-4">
+                        <img
+                          src={subcategoryForm.imagePreview}
+                          alt="Preview"
+                          className="w-full h-48 object-cover rounded-lg mx-auto"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (subcategoryForm.imagePreview) {
+                              URL.revokeObjectURL(subcategoryForm.imagePreview);
+                            }
+                            setSubcategoryForm((prev) => ({
+                              ...prev,
+                              image: null,
+                              imagePreview: null,
+                            }));
+                          }}
+                          className="text-red-500 hover:text-red-700 text-sm font-medium"
+                        >
+                          Şəkli sil
+                        </button>
+                      </div>
+                    ) : (
+                      <div>
+                        <FaImage className="h-12 w-12 text-[#5C4977]/40 mx-auto mb-4" />
+                        <p className="text-gray-600 mb-2">*Файл не выбран</p>
+                        <label className="inline-block cursor-pointer">
+                          <span className="bg-[#5C4977] text-white py-2 px-4 rounded-lg font-medium hover:bg-[#5C4977]/90 transition-colors">
+                            Şəkil Seç
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleSubcategoryImageChange}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div className="flex gap-3">
                   <button
                     type="button"
                     onClick={() => {
+                      if (subcategoryForm.imagePreview) {
+                        URL.revokeObjectURL(subcategoryForm.imagePreview);
+                      }
                       setShowAddSubcategoryModal(false);
-                      setSubcategoryForm({ name: "" });
+                      setSubcategoryForm({ name: "", image: null, imagePreview: null });
                       setSelectedCategoryId(null);
                     }}
                     className="flex-1 border border-[#5C4977]/20 text-[#5C4977] hover:bg-[#5C4977]/5 font-medium py-3 px-4 rounded-xl transition-colors"

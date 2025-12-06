@@ -24,7 +24,7 @@ const Blogs = () => {
               className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-md w-full max-w-sm"
             >
               <img
-                src={blog.image?.[0]?.url || "https://via.placeholder.com/400x200"}
+                src={blog.images?.[0]?.url || "https://via.placeholder.com/400x200"}
                 alt={blog.title}
                 className="w-full h-48 object-cover"
               />
@@ -33,8 +33,13 @@ const Blogs = () => {
                   {blog.title}
                 </h2>
                 <p className="text-sm text-gray-600 mt-2">
-                  {blog.description}
+                  {blog.shortContent || blog.content?.substring(0, 100)}
                 </p>
+                {blog.date && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    {new Date(blog.date).toLocaleDateString('az-AZ')}
+                  </p>
+                )}
                 <a
                   href={`/blog/${blog._id}`} // Navigates to the blog details page
                   className="text-[#fe9034] hover:underline mt-4 inline-block"

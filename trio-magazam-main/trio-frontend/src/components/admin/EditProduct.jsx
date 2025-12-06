@@ -6,6 +6,8 @@ import {
   useGetProductsQuery 
 } from '../../redux/api/productsApi';
 import { useGetCategoriesQuery } from '../../redux/api/categoryApi';
+import { useGetBrandsQuery } from '../../redux/api/brandApi';
+import { useGetSpecsQuery } from '../../redux/api/specApi';
 import Swal from 'sweetalert2';
 import { 
   Upload, 
@@ -19,7 +21,8 @@ import {
   ShoppingBag,
   Cpu,
   Image as ImageIcon,
-  Save
+  Save,
+  Check
 } from 'lucide-react';
 
 const EditProduct = () => {
@@ -30,6 +33,12 @@ const EditProduct = () => {
   const [editProduct, { isLoading: isUpdating }] = useEditProductMutation();
   const { data: categoriesData } = useGetCategoriesQuery();
   const categories = categoriesData?.categories || [];
+
+  const { data: brandsData } = useGetBrandsQuery();
+  const brands = brandsData?.brands || [];
+
+  const { data: specsData } = useGetSpecsQuery();
+  const specs = specsData?.specs || [];
 
   const [formData, setFormData] = useState({
     name: '',
@@ -43,12 +52,14 @@ const EditProduct = () => {
     stock: '',
   });
   
+  // Seçilmiş xüsusiyyətlər
+  const [selectedSpecs, setSelectedSpecs] = useState({});
+  
   // Seçilmiş kateqoriyanın alt kateqoriyalarını tap
   const selectedCategory = categories.find((cat) => cat.name === formData.category);
   const subcategories = selectedCategory?.subcategories || [];
 
   const [formErrors, setFormErrors] = useState({});
-  const [specsInput, setSpecsInput] = useState([{ key: "", value: "" }]);
   const [images, setImages] = useState([]);
   const [previews, setPreviews] = useState([]);
   const [removedImages, setRemovedImages] = useState([]);
@@ -69,20 +80,41 @@ const EditProduct = () => {
         stock: product.stock || '',
       });
 
+      // Xüsusiyyətləri yüklə
       if (product.specs && typeof product.specs === 'object') {
-        const specsArray = Object.entries(product.specs).map(([key, value]) => ({
-          key,
-          value: String(value)
-        }));
-        setSpecsInput(specsArray.length > 0 ? specsArray : [{ key: "", value: "" }]);
-      }
-
-      if (product.images && product.images.length > 0) {
-        setPreviews(product.images.map(img => img.url));
-        setMainImageIndex(0);
+        // Product specs-də spec name və value var
+        // Bizim selectedSpecs-də specId -> specName saxlamalıyıq
+        const selectedSpecsMap = {};
+        Object.entries(product.specs).forEach(([specName, specValue]) => {
+          // Specs array-dən spec name-ə uyğun gələn spec-i tap
+          const spec = specs.find(s => s.name === specName);
+          if (spec) {
+            selectedSpecsMap[spec._id] = spec.name;
+          }
+        });
+        setSelectedSpecs(selectedSpecsMap);
       }
     }
-  }, [data]);
+
+    if (data?.product && data.product.images && data.product.images.length > 0) {
+      setPreviews(data.product.images.map(img => img.url));
+      setMainImageIndex(0);
+    }
+  }, [data, specs]);
+
+  // Xüsusiyyət seçimi üçün funksiya
+  const handleSpecChange = (specId, specName) => {
+    setSelectedSpecs(prev => {
+      // Əgər spec artıq seçilibsə, sil
+      if (prev[specId]) {
+        const newSpecs = { ...prev };
+        delete newSpecs[specId];
+        return newSpecs;
+      }
+      // Əgər spec seçilməyibsə, əlavə et
+      return { ...prev, [specId]: specName };
+    });
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -203,23 +235,6 @@ const EditProduct = () => {
     setMainImageIndex(index);
   };
 
-  const addSpecField = () => {
-    setSpecsInput((prev) => [...prev, { key: "", value: "" }]);
-  };
-
-  const removeSpecField = (idx) => {
-    setSpecsInput((prev) => prev.filter((_, index) => index !== idx));
-  };
-
-  const handleSpecChange = (e, idx) => {
-    const { name, value } = e.target;
-    setSpecsInput((prev) => {
-      const updated = [...prev];
-      updated[idx][name] = value;
-      return updated;
-    });
-  };
-
   const validateForm = () => {
     const errors = {};
     const requiredFields = {
@@ -275,15 +290,9 @@ const EditProduct = () => {
 
       updatedData.append("mainImageIndex", mainImageIndex.toString());
 
-      const specsObj = {};
-      specsInput.forEach((item) => {
-        if (item.key && item.value && item.key.trim() !== '' && item.value.trim() !== '') {
-          specsObj[item.key.trim()] = item.value.trim();
-        }
-      });
-      
-      if (Object.keys(specsObj).length > 0) {
-        updatedData.append("specs", JSON.stringify(specsObj));
+      // Seçilmiş xüsusiyyətləri əlavə et
+      if (Object.keys(selectedSpecs).length > 0) {
+        updatedData.append("specs", JSON.stringify(selectedSpecs));
       }
 
       images.forEach((file) => {
@@ -668,56 +677,63 @@ const EditProduct = () => {
             <div className="border-t border-[#5C4977]/10 pt-6">
               <div className="flex items-center gap-2 mb-4">
                 <Cpu className="h-5 w-5 text-[#5C4977]" />
-                <h2 className="text-xl font-semibold text-[#5C4977]">Texniki Xüsusiyyətlər</h2>
+                <h2 className="text-xl font-semibold text-[#5C4977]">Xüsusiyyətlər (Seçmək üçün klikləyin)</h2>
                 <span className="text-sm text-gray-500">(İstəyə bağlı)</span>
               </div>
 
               <div className="space-y-4">
-                {specsInput.map((spec, index) => (
-                  <div key={index} className="flex gap-3 items-start">
-                    <div className="flex-1">
-                      <input
-                        name="key"
-                        value={spec.key}
-                        onChange={(e) => handleSpecChange(e, index)}
-                        placeholder="Xüsusiyyət (məs: RAM)"
-                        className="w-full px-4 py-2 border border-[#5C4977]/20 rounded-lg focus:ring-2 focus:ring-[#5C4977] focus:border-transparent"
-                      />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {specs.map((spec) => (
+                    <button
+                      key={spec._id}
+                      type="button"
+                      onClick={() => handleSpecChange(spec._id, spec.name)}
+                      className={`p-3 border rounded-xl text-left transition-all duration-200 ${
+                        selectedSpecs[spec._id]
+                          ? 'bg-[#5C4977] text-white border-[#5C4977]'
+                          : 'border-[#5C4977]/20 hover:border-[#5C4977] hover:bg-[#5C4977]/5'
+                      }`}
+                      disabled={isUpdating}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{spec.name}</span>
+                        {selectedSpecs[spec._id] && (
+                          <Check className="h-5 w-5 text-white" />
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                {specs.length === 0 && (
+                  <p className="text-sm text-gray-500">
+                    Xüsusiyyət yoxdur. Admin panelindən xüsusiyyət əlavə edin.
+                  </p>
+                )}
+                {Object.keys(selectedSpecs).length > 0 && (
+                  <div className="mt-4 p-4 bg-[#5C4977]/5 rounded-xl">
+                    <p className="text-sm font-medium text-[#5C4977] mb-2">
+                      Seçilmiş Xüsusiyyətlər:
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {Object.entries(selectedSpecs).map(([specId, specName]) => (
+                        <span
+                          key={specId}
+                          className="inline-flex items-center gap-1 bg-[#5C4977] text-white px-3 py-1 rounded-full text-sm"
+                        >
+                          {specName}
+                          <button
+                            type="button"
+                            onClick={() => handleSpecChange(specId, specName)}
+                            className="ml-1 hover:text-red-200"
+                            disabled={isUpdating}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
                     </div>
-                    
-                    <div className="flex-1">
-                      <input
-                        name="value"
-                        value={spec.value}
-                        onChange={(e) => handleSpecChange(e, index)}
-                        placeholder="Dəyər (məs: 16GB)"
-                        className="w-full px-4 py-2 border border-[#5C4977]/20 rounded-lg focus:ring-2 focus:ring-[#5C4977] focus:border-transparent"
-                      />
-                    </div>
-                    
-                    {specsInput.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeSpecField(index)}
-                        className="text-red-500 hover:text-red-700 p-2 transition-colors"
-                        title="Sil"
-                      >
-                        <X className="h-5 w-5" />
-                      </button>
-                    )}
                   </div>
-                ))}
-                
-                <button
-                  type="button"
-                  onClick={addSpecField}
-                  className="flex items-center gap-2 text-[#5C4977] hover:text-[#5C4977]/70 transition-colors"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Yeni Xüsusiyyət Əlavə Et
-                </button>
+                )}
               </div>
             </div>
 
@@ -768,7 +784,11 @@ const EditProduct = () => {
                     <p className="text-gray-600 mb-2">Şəkilləri buraya sürüşdürün və ya klikləyin</p>
                     <p className="text-sm text-gray-500 mb-4">Maksimum 6 şəkil, hər biri 5MB-dan az olmalıdır</p>
                     <label className="inline-block cursor-pointer">
-                      <span className="bg-[#5C4977] text-white py-2 px-6 rounded-lg font-medium hover:bg-[#5C4977]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                      <span className={`py-2 px-6 rounded-lg font-medium transition-colors ${
+                        previews.length - removedImages.length + images.length >= 6 || isUpdating
+                          ? 'bg-gray-400 text-white cursor-not-allowed'
+                          : 'bg-[#5C4977] text-white hover:bg-[#5C4977]/90'
+                      }`}>
                         Şəkil Seç
                       </span>
                       <input
@@ -813,6 +833,7 @@ const EditProduct = () => {
                                 onClick={() => removeImage(index, isExistingImage, existingImage?.public_id)}
                                 className="bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg transition-colors"
                                 title="Sil"
+                                disabled={isUpdating}
                               >
                                 <X className="h-4 w-4" />
                               </button>
@@ -822,6 +843,7 @@ const EditProduct = () => {
                                   onClick={() => setAsMainImage(index)}
                                   className="bg-green-500 hover:bg-green-600 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg transition-colors"
                                   title="Əsas şəkil et"
+                                  disabled={isUpdating}
                                 >
                                   <Star className="h-4 w-4" />
                                 </button>

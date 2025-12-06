@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useGetProductsQuery, useFilterProductsQuery } from "../redux/api/productsApi";
 import { useGetCategoriesQuery } from "../redux/api/categoryApi";
+import { useGetBrandsQuery } from "../redux/api/brandApi";
+import { useGetSpecsQuery } from "../redux/api/specApi";
 import { Link } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { Heart, GitCompare, ZoomIn, SlidersHorizontal } from 'lucide-react';
@@ -250,11 +252,21 @@ const Products2 = () => {
   const [priceMax, setPriceMax] = useState(1299);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSubcategory, setSelectedSubcategory] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState("");
+  const [selectedSpecs, setSelectedSpecs] = useState({});
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   // Categories from API
   const { data: categoriesData } = useGetCategoriesQuery();
   const categories = categoriesData?.categories || [];
+  
+  // Brands from API
+  const { data: brandsData } = useGetBrandsQuery();
+  const brands = brandsData?.brands || [];
+
+  // Specs from API
+  const { data: specsData } = useGetSpecsQuery();
+  const specs = specsData?.specs || [];
   
   // Seçilmiş kateqoriyanın alt kateqoriyalarını tap
   const selectedCategoryData = categories.find((cat) => cat.name === selectedCategory);
@@ -288,6 +300,14 @@ const Products2 = () => {
     }
   }, [selectedCategory]);
 
+  // Spec dəyərini dəyişdirmək
+  const handleSpecChange = (specId, value) => {
+    setSelectedSpecs((prev) => ({
+      ...prev,
+      [specId]: value,
+    }));
+  };
+
   // Filtered products - FİLTRELEME MANTIĞI DÜZELTİLDİ
   const filteredProducts = useMemo(() => {
     // Hangi veriyi kullanacağımızı belirle
@@ -302,6 +322,27 @@ const Products2 = () => {
       );
     }
 
+    // Brand filtresi
+    if (selectedBrand) {
+      productsToFilter = productsToFilter.filter(product => 
+        product.brand === selectedBrand
+      );
+    }
+
+    // Specs filtresi
+    Object.entries(selectedSpecs).forEach(([specId, specValue]) => {
+      if (specValue && specValue.trim() !== "") {
+        const spec = specs.find(s => s._id === specId);
+        if (spec) {
+          productsToFilter = productsToFilter.filter(product => {
+            const productSpecs = product.specs || {};
+            return productSpecs[spec.name] && 
+                   productSpecs[spec.name].toLowerCase().includes(specValue.toLowerCase());
+          });
+        }
+      }
+    });
+
     // Fiyat filtresini uygula
     const priceFiltered = productsToFilter.filter(product => {
       const price = product.price || 0;
@@ -312,6 +353,9 @@ const Products2 = () => {
   }, [
     selectedCategory,
     selectedSubcategory,
+    selectedBrand,
+    selectedSpecs,
+    specs,
     allProductsData, 
     filteredData, 
     priceMin, 
@@ -464,6 +508,8 @@ const Products2 = () => {
               setPriceMax(1299);
               setSelectedCategory("");
               setSelectedSubcategory("");
+              setSelectedBrand("");
+              setSelectedSpecs({});
             }}
           >
             Filtrləri Sıfırla

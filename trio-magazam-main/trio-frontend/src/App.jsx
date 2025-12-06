@@ -15,6 +15,8 @@ import EditProduct from './components/admin/EditProduct'
 import AdminBlog from './components/admin/AdminBlog'
 import AddBlogs from './components/admin/AddBlogs'
 import CategoryManagement from './components/admin/CategoryManagement'
+import BrandManagement from './components/admin/BrandManagement'
+import SpecsManagement from './components/admin/SpecsManagement'
 
 import PrivateRoute from './components/PrivateRoute'
 import AdminRoute from './components/AdminRoues'   // ⭐ <-- BURADA IMPORT ET
@@ -89,6 +91,18 @@ function App() {
           <Route path='/admin/categories' element={
             <AdminRoute>
               <CategoryManagement />
+            </AdminRoute>
+          } />
+
+          <Route path='/admin/brands' element={
+            <AdminRoute>
+              <BrandManagement />
+            </AdminRoute>
+          } />
+
+          <Route path='/admin/specs' element={
+            <AdminRoute>
+              <SpecsManagement />
             </AdminRoute>
           } />
         </Routes>

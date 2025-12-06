@@ -37,10 +37,10 @@ export const categoryApi = createApi({
       invalidatesTags: ["Categories"],
     }),
     addSubcategory: builder.mutation({
-      query: ({ categoryId, name }) => ({
+      query: ({ categoryId, formData }) => ({
         url: `/admin/categories/${categoryId}/subcategories`,
         method: "POST",
-        body: { name },
+        body: formData,
       }),
       invalidatesTags: ["Categories"],
     }),

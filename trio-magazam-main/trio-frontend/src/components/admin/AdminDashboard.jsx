@@ -144,6 +144,22 @@ const AdminDashboard = () => {
             </Link>
 
             <Link
+              to="/admin/brands"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 hover:text-[#5C4977] transition-all duration-200"
+            >
+              <Tag size={20} />
+              <span className="font-medium">Brendlər</span>
+            </Link>
+
+            <Link
+              to="/admin/specs"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 hover:text-[#5C4977] transition-all duration-200"
+            >
+              <Tag size={20} />
+              <span className="font-medium">Xüsusiyyətlər</span>
+            </Link>
+
+            <Link
               to="/admin/orders"
               className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 hover:text-[#5C4977] transition-all duration-200"
             >

@@ -45,6 +45,7 @@ router.post(
   "/admin/categories/:categoryId/subcategories",
   isAuthenticatedUser,
   authorizeRoles("admin"),
+  uploadImage,
   addSubcategory
 );
 
